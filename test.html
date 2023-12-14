@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Visualizar y editar datos de CSV/XLS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    form {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+
+  <h1>Visualizar y editar datos de CSV/XLS</h1>
+
+  <table id="dataTable">
+    <!-- Aquí se mostrarán los datos -->
+  </table>
+
+  <form>
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" name="nombre" placeholder="Ingrese el nombre">
+    <br>
+    <label for="estado">Estado:</label>
+    <input type="text" id="estado" name="estado" placeholder="Ingrese el estado">
+    <br>
+    <input type="file" id="fileInput" accept=".csv, .xls, .xlsx">
+    <button type="button" onclick="cargarArchivo()">Cargar Archivo</button>
+    <button type="button" onclick="guardarDatos()">Guardar</button>
+  </form>
+
+  <script>
+    let data = []; // Almacenará los datos cargados
+
+    async function cargarDatos(content, fileType) {
+      try {
+        if (fileType === "csv") {
+          await cargarCSV(content);
+        } else if (fileType === "xls" || fileType === "xlsx") {
+          // Agrega la lógica para cargar Excel si es necesario
+          console.error("Formato de archivo no compatible");
+        }
+      } catch (error) {
+        console.error("Error al cargar el archivo:", error);
+      }
+    }
+
+    async function cargarCSV(content) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(content, {
+          complete: (result) => {
+            data = result.data;
+            mostrarDatos();
+            resolve();
+          },
+          error: (error) => {
+            reject(error.message);
+          },
+        });
+      });
+    }
+
+    function mostrarDatos() {
+      const table = document.getElementById("dataTable");
+      // Limpia la tabla antes de mostrar nuevos datos
+      table.innerHTML = "";
+
+      // Crea las filas y celdas de la tabla
+      for (const fila of data) {
+        const tr = document.createElement("tr");
+        for (const celda of fila) {
+          const td = document.createElement("td");
+          td.textContent = celda;
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+    }
+
+    function cargarArchivo() {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+
+      if (file) {
+        const fileType = getFileType(file.name);
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          const content = event.target.result;
+          cargarDatos(content, fileType);
+        };
+
+        reader.readAsText(file);
+      } else {
+        console.error("No se ha seleccionado ningún archivo");
+      }
+    }
+
+    function guardarDatos() {
+      const nombreInput = document.getElementById("nombre");
+      const estadoInput = document.getElementById("estado");
+
+      const nombre = nombreInput.value;
+      const estado = estadoInput.value;
+
+      // Puedes realizar acciones con los datos, como enviarlos al servidor o guardarlos localmente
+      console.log("Nombre:", nombre);
+      console.log("Estado:", estado);
+
+      // Reinicia los campos de entrada
+      nombreInput.value = "";
+      estadoInput.value = "";
+    }
+
+    function getFileType(fileName) {
+      // Obtén la extensión del archivo para determinar el tipo
+      const extension = fileName.split(".").pop().toLowerCase();
+      return extension === "csv" ? "csv" : extension === "xls" || extension === "xlsx" ? "xls" : null;
+    }
+  </script>
+
+</body>
+</html>
